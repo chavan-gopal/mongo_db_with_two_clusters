@@ -19,6 +19,7 @@ function getExternalDBUrl(){
 }
 
 const tableName = 'accounts'
+const condition = { account_id: 371138 }
 
 async function connect_ext(url) {
   // Here we make use of createConnection method, instead of connect method
@@ -28,18 +29,29 @@ async function connect_ext(url) {
   return conn
 }
 
-async function printRecord_ext(conn, details) {
-  const {tableName, schema, condition} = details
-  const MyModel = conn.model(tableName, schema)
+async function printRecord_ext(conn) {
+  const MyModel = conn.model(tableName, Account)
   const res = await MyModel.findOne(condition)
+  console.log(res)
+}
+
+async function insertRecs_ext(conn) {
+  const recs = [{
+    account_id: 999901,
+    limit: 10000,
+    products: ['a', 'b']
+  }]
+  const MyModel = conn.model(tableName, Account)
+  const res = await MyModel.insertMany(recs)
   console.log(res)
 }
 
 module.exports = {
   url: getExternalDBUrl(),
   schema: Account,
-  condition: { account_id: 371138 },
+  condition,
   tableName,
   connect_ext,
-  printRecord_ext
+  printRecord_ext,
+  insertRecs_ext
 }

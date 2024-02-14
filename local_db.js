@@ -2,6 +2,8 @@
 let mongoose = require('mongoose')
 let Schema = mongoose.Schema
 
+mongoose.plugin(require('./dateFields_celigo_plugin'))
+
 const Heartbeat = new Schema({
   key: {type: String, required: true, unique: true},
   timestamp: {type: Date, required: true},
@@ -19,24 +21,49 @@ function getLocalDBUrl(){
   
 const tableName = 'heartbeats'
 
+const condition = {key: "Gopals-MBP"}
+
 async function connect_local(url) {
   // we use the same method to connect to cluster as we do in adaptor-model repo
   await mongoose.connect(url)
 }
 
-async function printRecord_local(details) {
-  const {tableName, schema, condition} = details
-  const MyModel = mongoose.model(tableName, schema)
+function modelWrapper() {
+  let instance;
+  return {
+    getInstance: function() {
+      if(instance) return instance
+      instance = mongoose.model(tableName, Heartbeat)
+      return instance
+    }
+  } 
+}
+const model = modelWrapper()
+
+async function printRecord_local() {
+  const MyModel = model.getInstance()
   const res = await MyModel.findOne(condition)
+  console.log(res)
+}
+
+async function insertRecs_local() {
+  const recs = [{
+    key: 'some_key_7',
+    timestamp: new Date(),
+    uptime: 10
+  }]
+  const MyModel = model.getInstance()
+  const res = await MyModel.insertMany(recs)
   console.log(res)
 }
   
 module.exports = {
   url: getLocalDBUrl(),
   schema: Heartbeat,
-  condition: {key: "Gopals-MBP"},
+  condition,
   tableName,
   connect_local,
-  printRecord_local
+  printRecord_local,
+  insertRecs_local
 }
 
