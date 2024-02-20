@@ -7,7 +7,8 @@ mongoose.plugin(require('./dateFields_celigo_plugin'))
 const Heartbeat = new Schema({
   key: {type: String, required: true, unique: true},
   timestamp: {type: Date, required: true},
-  uptime: {type: Number}
+  uptime: {type: Number},
+  deletedAt: { type: Date, default: null, index: { expireAfterSeconds: 0 } }
 })
 
 function getLocalDBUrl(){
@@ -47,10 +48,16 @@ async function printRecord_local() {
 }
 
 async function insertRecs_local() {
+
+  const expirationTime = new Date();
+  expirationTime.setMinutes(expirationTime.getMinutes() + 1)
+  // expirationTime.setDate(expirationTime.getDate() + dataRetentionDays);
+
   const recs = [{
-    key: 'some_key_7',
+    key: 'some_key_8',
     timestamp: new Date(),
-    uptime: 10
+    uptime: 10,
+    deletedAt: expirationTime,
   }]
   const MyModel = model.getInstance()
   const res = await MyModel.insertMany(recs)
